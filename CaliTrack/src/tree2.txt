@@ -1,0 +1,47 @@
+Listado de rutas de carpetas para el volumen Windows
+El número de serie del volumen es 6C38-8221
+C:.
+|   App.vue
+|   main.ts
+|   tree2.txt
+|   
++---assets
+|       main.css
+|       
++---components
+|   +---charts
+|   +---layout
+|   |       AppLayout.vue
+|   |       
+|   \---ui
+|           InsightItem.vue
+|           MetricCard.vue
+|           
++---composables
+|       useDashboard.ts
+|       useProgress.ts
+|       useWorkoutLog.ts
+|       
++---data
+|       mockData.ts
+|       
++---router
+|       index.ts
+|       
++---stores
+|       auth.ts
+|       counter.ts
+|       
++---types
+|       index.ts
+|       
+\---views
+        DashboardView.vue
+        LoginView.vue
+        LogView.vue
+        OnboardingView.vue
+        ProfileView.vue
+        ProgressDetailView.vue
+        ProgressView.vue
+        SplashView.vue
+        
