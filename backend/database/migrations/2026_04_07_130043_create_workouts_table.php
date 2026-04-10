@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up(): void
-{
+    {
     Schema::create('workouts', function (Blueprint $table) {
         $table->id();
         
@@ -29,10 +29,10 @@ return new class extends Migration
         
         $table->timestamps();
     });
-}
+    }
 
-public function down(): void
-{
-    Schema::dropIfExists('workouts');
-}
+    public function down(): void
+    {
+        Schema::dropIfExists('workouts');
+    }
 };

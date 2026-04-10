@@ -10,7 +10,7 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
+    {
     Schema::table('users', function (Blueprint $table) {
         $table->unsignedTinyInteger('age')->nullable()->after('remember_token');
         $table->unsignedSmallInteger('height_cm')->nullable()->after('age');
@@ -22,12 +22,12 @@ return new class extends Migration
               ->nullable()
               ->after('level');
     });
-}
+    }
 
-public function down(): void
-{
-    Schema::table('users', function (Blueprint $table) {
-        $table->dropColumn(['age', 'height_cm', 'weight_kg', 'level', 'goal']);
-    });
-}
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['age', 'height_cm', 'weight_kg', 'level', 'goal']);
+        });
+    }
 };

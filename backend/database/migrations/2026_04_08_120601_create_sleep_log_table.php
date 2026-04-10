@@ -6,32 +6,36 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-    Schema::create('body_weight_log', function (Blueprint $table) {
+    Schema::create('sleep_log', function (Blueprint $table) {
         $table->id();
-        
+
         $table->foreignId('user_id')
               ->constrained()
               ->cascadeOnDelete();
-        
+
         $table->date('date');
-        
-        $table->smallInteger('weight_kg')->unsigned();
-        // Consistente con tu decisión en users — sin decimales
-        
-        $table->text('notes')->nullable();
-        
+
+        $table->decimal('hours', 4, 1);
+        // decimal(4,1) → hasta 999.9 horas, permite 7.5h, 8.0h, 6.5h
+        // Aquí sí tiene sentido el decimal — medio hora importa para el sueño
+
+        $table->tinyInteger('quality')->unsigned()->nullable();
+        // Calidad subjetiva 1-5
+
         $table->timestamps();
-        
+
         $table->unique(['user_id', 'date']);
-        // Clave única compuesta: un usuario solo puede tener
-        // un registro de peso por día. MySQL lo refuerza a nivel de BD.
+        // Un registro de sueño por día por usuario
     });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('body_weight_log');
+        Schema::dropIfExists('sleep_log');
     }
 };
