@@ -1,95 +1,124 @@
-import { ref, computed, reactive } from 'vue'
-import { mockExercises, mockDashboard } from '@/data/mockData'
-import type { WorkoutSet, Workout } from '@/types'
+import { ref, computed } from 'vue'
+import { mockExercises, mockWorkouts } from '@/data/mockData'
+import type { Exercise, Workout, WorkoutSet } from '@/types'
+
+// Tipo local para el formulario — más simple que WorkoutSet completo
+interface FormSet {
+  set_number: number
+  reps: number
+  weight_kg: number
+  rpe: number
+}
 
 export function useWorkoutLog() {
+  const date = ref(new Date().toISOString().split('T')[0])
+  const bodyWeight = ref<number>(68.0)
+  const selectedExercise = ref<Exercise>(mockExercises[0]!)
+  const notes = ref('')
 
-  // Estado del formulario
-  const fecha = ref(new Date().toISOString().split('T')[0])
-  const pesoCorporal = ref<number>(68.0)
-  const ejercicioSeleccionado = ref(mockExercises[0].nombre)
-  const notas = ref('')
-
-  // Series — empieza con 3 vacías
-  const series = ref<WorkoutSet[]>([
-    { serie: 1, reps: 0, carga_kg: 0, rpe: 0 },
-    { serie: 2, reps: 0, carga_kg: 0, rpe: 0 },
-    { serie: 3, reps: 0, carga_kg: 0, rpe: 0 },
+  // Series del formulario — empieza con 3 vacías
+  const sets = ref<FormSet[]>([
+    { set_number: 1, reps: 0, weight_kg: 0, rpe: 0 },
+    { set_number: 2, reps: 0, weight_kg: 0, rpe: 0 },
+    { set_number: 3, reps: 0, weight_kg: 0, rpe: 0 },
   ])
 
   // Métricas calculadas en tiempo real
   const totalReps = computed(() =>
-    series.value.reduce((acc, s) => acc + (s.reps || 0), 0)
+    sets.value.reduce((acc, s) => acc + (s.reps || 0), 0)
   )
 
-  const volumenTotal = computed(() =>
-    series.value.reduce((acc, s) => {
-      const carga = s.carga_kg > 0 ? s.carga_kg : pesoCorporal.value
-      return acc + (s.reps || 0) * carga
+  const totalVolume = computed(() =>
+    sets.value.reduce((acc, s) => {
+      const load = s.weight_kg > 0 ? s.weight_kg : bodyWeight.value
+      return acc + (s.reps || 0) * load
     }, 0)
   )
 
-  const rpeMedia = computed(() => {
-    const seriesConRpe = series.value.filter(s => s.rpe > 0)
-    if (seriesConRpe.length === 0) return 0
-    const suma = seriesConRpe.reduce((acc, s) => acc + s.rpe, 0)
-    return Math.round((suma / seriesConRpe.length) * 10) / 10
+  const avgRpe = computed(() => {
+    const withRpe = sets.value.filter(s => s.rpe > 0)
+    if (withRpe.length === 0) return 0
+    const sum = withRpe.reduce((acc, s) => acc + s.rpe, 0)
+    return Math.round((sum / withRpe.length) * 10) / 10
   })
 
-  // Historial de entrenamientos guardados en esta sesión
-  const historial = ref<Workout[]>(mockDashboard.workouts_recientes)
+  // Historial local — en el futuro vendrá de la API
+  const history = ref<Workout[]>(mockWorkouts)
 
-  // Acciones
-  function añadirSerie() {
-    series.value.push({
-      serie: series.value.length + 1,
+  function addSet() {
+    sets.value.push({
+      set_number: sets.value.length + 1,
       reps: 0,
-      carga_kg: 0,
+      weight_kg: 0,
       rpe: 0,
     })
   }
 
-  function eliminarSerie(index: number) {
-    if (series.value.length <= 1) return
-    series.value.splice(index, 1)
-    // Renumerar
-    series.value.forEach((s, i) => { s.serie = i + 1 })
+  function removeSet(index: number) {
+    if (sets.value.length <= 1) return
+    sets.value.splice(index, 1)
+    sets.value.forEach((s, i) => { s.set_number = i + 1 })
   }
 
-  function guardarEntrenamiento() {
-    const nuevo: Workout = {
+  function saveWorkout() {
+    // Construimos el workout con la estructura real de la API
+    const newWorkout: Workout = {
       id: Date.now(),
-      fecha: fecha.value,
-      ejercicio: ejercicioSeleccionado.value,
-      peso_corporal: pesoCorporal.value,
-      series: [...series.value],
-      notas: notas.value,
+      user_id: 1,
+      date: new Date(date.value ?? new Date()).toISOString(),
+      notes: notes.value || null,
+      duration_minutes: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      workout_exercises: [
+        {
+          id: Date.now(),
+          workout_id: Date.now(),
+          exercise_id: selectedExercise.value.id,
+          order_index: 1,
+          load_type: selectedExercise.value.load_type,
+          rest_time: null,
+          intensity_target: null,
+          notes: null,
+          exercise: selectedExercise.value,
+          sets: sets.value.map((s, i): WorkoutSet => ({
+            id: i + 1,
+            workout_exercise_id: Date.now(),
+            set_number: s.set_number,
+            reps: s.reps,
+            weight_kg: s.weight_kg,
+            is_assistance: false,
+            rpe: s.rpe || null,
+          })),
+        },
+      ],
     }
-    historial.value.unshift(nuevo)
+
+    history.value.unshift(newWorkout)
 
     // Resetear formulario
-    series.value = [
-      { serie: 1, reps: 0, carga_kg: 0, rpe: 0 },
-      { serie: 2, reps: 0, carga_kg: 0, rpe: 0 },
-      { serie: 3, reps: 0, carga_kg: 0, rpe: 0 },
+    sets.value = [
+      { set_number: 1, reps: 0, weight_kg: 0, rpe: 0 },
+      { set_number: 2, reps: 0, weight_kg: 0, rpe: 0 },
+      { set_number: 3, reps: 0, weight_kg: 0, rpe: 0 },
     ]
-    notas.value = ''
+    notes.value = ''
 
-    return nuevo
+    return newWorkout
   }
 
   return {
-    fecha,
-    pesoCorporal,
-    ejercicioSeleccionado,
-    notas,
-    series,
+    date,
+    bodyWeight,
+    selectedExercise,
+    notes,
+    sets,
     totalReps,
-    volumenTotal,
-    rpeMedia,
-    historial,
-    añadirSerie,
-    eliminarSerie,
-    guardarEntrenamiento,
+    totalVolume,
+    avgRpe,
+    history,
+    addSet,
+    removeSet,
+    saveWorkout,
   }
 }

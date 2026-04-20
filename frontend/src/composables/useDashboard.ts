@@ -5,47 +5,58 @@ import type { DashboardData, BodyWeightEntry } from '@/types'
 export function useDashboard() {
   const data = ref<DashboardData>(mockDashboard)
   const bodyWeight = ref<BodyWeightEntry[]>(mockBodyWeight)
-  const ejercicioActivo = ref('Dominadas / Pull-ups')
+  const activeExercise = ref('Pull-up')
   const isLoading = ref(false)
 
   // Progresión del ejercicio activo
-  const progresionActiva = computed(() => {
-    return mockProgressByExercise[ejercicioActivo.value] ?? []
+  const activeProgression = computed(() => {
+    return mockProgressByExercise[activeExercise.value] ?? []
   })
 
   // Último valor de progresión
-  const valorActual = computed(() => {
-    const puntos = progresionActiva.value
-    return puntos[puntos.length - 1]?.valor ?? 0
+  const currentValue = computed(() => {
+    const points = activeProgression.value
+    return points[points.length - 1]?.value ?? 0
   })
 
   // Diferencia con 4 semanas atrás
-  const mejora4semanas = computed(() => {
-    const puntos = progresionActiva.value
-    if (puntos.length < 5) return 0
-    return puntos[puntos.length - 1].valor - puntos[puntos.length - 5].valor
-  })
+  const improvement4weeks = computed(() => {
+    const points = activeProgression.value
+    if (points.length < 5) return 0
+    const last = points[points.length - 1]
+    const prev = points[points.length - 5]
+    if (!last || !prev) return 0
+    return last.value - prev.value
+})
 
   // Volumen del último entrenamiento
-  const volumenUltimoEntrenamiento = computed(() => {
-    const ultimo = data.value.workouts_recientes[0]
-    if (!ultimo) return 0
-    return ultimo.series.reduce((acc, s) => acc + s.reps * (s.carga_kg || 1), 0)
+  // Un workout ahora tiene workout_exercises > sets en lugar de series planas
+  const lastWorkoutVolume = computed(() => {
+    const last = data.value.recent_workouts[0]
+    if (!last) return 0
+    return last.workout_exercises.reduce((total, we) => {
+      return total + we.sets.reduce((acc, s) => {
+        const load = s.weight_kg > 0 ? s.weight_kg : 1
+        // Si no hay carga extra usamos 1 como multiplicador neutro
+        // En el futuro aquí irá el peso corporal real del usuario
+        return acc + s.reps * load
+      }, 0)
+    }, 0)
   })
 
-  function cambiarEjercicio(nombre: string) {
-    ejercicioActivo.value = nombre
+  function changeExercise(name: string) {
+    activeExercise.value = name
   }
 
   return {
     data,
     bodyWeight,
-    ejercicioActivo,
-    progresionActiva,
-    valorActual,
-    mejora4semanas,
-    volumenUltimoEntrenamiento,
+    activeExercise,
+    activeProgression,
+    currentValue,
+    improvement4weeks,
+    lastWorkoutVolume,
     isLoading,
-    cambiarEjercicio,
+    changeExercise,
   }
 }

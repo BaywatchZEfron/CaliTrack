@@ -1,109 +1,166 @@
 import type { DashboardData, Workout, BodyWeightEntry, Exercise } from '@/types'
 
+// ─── USER ────────────────────────────────────────────────────────────────────
+
 export const mockUser = {
   id: 1,
-  nombre: 'Javier',
-  nivel: 'Intermedio' as const,
-  peso_actual: 68.0,
-  altura: 178,
-  objetivo: 'fuerza' as const,
+  name: 'Javier',
+  email: 'javier@calitrack.com',
+  age: 22,
+  height_cm: 178,
+  weight_kg: 68,
+  level: 'intermediate' as const,
+  goal: 'strength' as const,
+  created_at: '2026-01-01T00:00:00.000000Z',
+  updated_at: '2026-01-01T00:00:00.000000Z',
 }
+
+// ─── EXERCISES ───────────────────────────────────────────────────────────────
 
 export const mockExercises: Exercise[] = [
-  { id: 1, nombre: 'Dominadas / Pull-ups', tipo: 'reps', unidad: 'reps' },
-  { id: 2, nombre: 'Fondos / Dips', tipo: 'reps', unidad: 'reps' },
-  { id: 3, nombre: 'Handstand', tipo: 'tiempo', unidad: 'seg' },
-  { id: 4, nombre: 'Muscle-up', tipo: 'reps', unidad: 'reps' },
-  { id: 5, nombre: 'Pistol squat', tipo: 'reps', unidad: 'reps' },
+  {
+    id: 1, name: 'Pull-up',
+    muscle_group: 'back', category: 'pull',
+    load_type: 'bodyweight', is_default: true, user_id: null,
+  },
+  {
+    id: 2, name: 'Dip',
+    muscle_group: 'chest', category: 'push',
+    load_type: 'bodyweight', is_default: true, user_id: null,
+  },
+  {
+    id: 3, name: 'Handstand Push-up',
+    muscle_group: 'shoulders', category: 'push',
+    load_type: 'bodyweight', is_default: true, user_id: null,
+  },
+  {
+    id: 4, name: 'Muscle-up',
+    muscle_group: 'back', category: 'pull',
+    load_type: 'bodyweight', is_default: true, user_id: null,
+  },
+  {
+    id: 5, name: 'Pistol Squat',
+    muscle_group: 'legs', category: 'legs',
+    load_type: 'bodyweight', is_default: true, user_id: null,
+  },
 ]
 
-export const mockDashboard: DashboardData = {
-  entrenamientos_mes: 14,
-  semanas_activas: 11,
-  score_semanal: 84,
-  peso_corporal: 68.0,
-  ejercicio_activo: 'Dominadas / Pull-ups',
-  progresion: [
-    { semana: 'S1', valor: 7 },
-    { semana: 'S2', valor: 8 },
-    { semana: 'S3', valor: 8 },
-    { semana: 'S4', valor: 9 },
-    { semana: 'S5', valor: 10 },
-    { semana: 'S6', valor: 10 },
-    { semana: 'S7', valor: 11 },
-    { semana: 'hoy', valor: 12 },
-  ],
-  workouts_recientes: [
-    {
-      id: 1,
-      fecha: '2025-03-17',
-      ejercicio: 'Dominadas / Pull-ups',
-      peso_corporal: 68.0,
-      series: [
-        { serie: 1, reps: 12, carga_kg: 0, rpe: 7 },
-        { serie: 2, reps: 10, carga_kg: 0, rpe: 8 },
-        { serie: 3, reps: 9, carga_kg: 0, rpe: 9 },
-      ],
-    },
-    {
-      id: 2,
-      fecha: '2025-03-15',
-      ejercicio: 'Fondos / Dips',
-      peso_corporal: 68.2,
-      series: [
-        { serie: 1, reps: 15, carga_kg: 0, rpe: 7 },
-        { serie: 2, reps: 13, carga_kg: 0, rpe: 8 },
-        { serie: 3, reps: 11, carga_kg: 0, rpe: 8 },
-      ],
-    },
-    {
-      id: 3,
-      fecha: '2025-03-11',
-      ejercicio: 'Handstand',
-      peso_corporal: 68.5,
-      series: [
-        { serie: 1, reps: 45, carga_kg: 0, rpe: 6 },
-        { serie: 2, reps: 38, carga_kg: 0, rpe: 7 },
-        { serie: 3, reps: 30, carga_kg: 0, rpe: 8 },
-      ],
-    },
-  ],
-  insights: [
-    { tipo: 'success', texto: 'Volumen semanal +8% vs semana anterior — progresión sostenida' },
-    { tipo: 'warning', texto: 'RPE medio esta semana: 8.2 — considera reducir intensidad mañana' },
-    { tipo: 'info', texto: 'Handstand: sin registro en 9 días — planifica una sesión' },
-    { tipo: 'danger', texto: 'Sueño esta semana: 6.1h media — por debajo del óptimo' },
-  ],
-  sleep_media: 6.1,
-}
+// ─── WORKOUTS ────────────────────────────────────────────────────────────────
+
+export const mockWorkouts: Workout[] = [
+  {
+    id: 1,
+    user_id: 1,
+    date: '2026-03-17T00:00:00.000000Z',
+    notes: null,
+    duration_minutes: 45,
+    created_at: '2026-03-17T10:00:00.000000Z',
+    updated_at: '2026-03-17T10:00:00.000000Z',
+    workout_exercises: [
+      {
+        id: 1, workout_id: 1, exercise_id: 1,
+        order_index: 1, load_type: 'bodyweight',
+        rest_time: 90, intensity_target: null, notes: null,
+        exercise: {
+          id: 1, name: 'Pull-up', muscle_group: 'back',
+          category: 'pull', load_type: 'bodyweight',
+          is_default: true, user_id: null,
+        },
+        sets: [
+          { id: 1, workout_exercise_id: 1, set_number: 1, reps: 12, weight_kg: 0, is_assistance: false, rpe: 7 },
+          { id: 2, workout_exercise_id: 1, set_number: 2, reps: 10, weight_kg: 0, is_assistance: false, rpe: 8 },
+          { id: 3, workout_exercise_id: 1, set_number: 3, reps: 9,  weight_kg: 0, is_assistance: false, rpe: 9 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 2,
+    user_id: 1,
+    date: '2026-03-15T00:00:00.000000Z',
+    notes: null,
+    duration_minutes: 40,
+    created_at: '2026-03-15T10:00:00.000000Z',
+    updated_at: '2026-03-15T10:00:00.000000Z',
+    workout_exercises: [
+      {
+        id: 2, workout_id: 2, exercise_id: 2,
+        order_index: 1, load_type: 'bodyweight',
+        rest_time: 60, intensity_target: null, notes: null,
+        exercise: {
+          id: 2, name: 'Dip', muscle_group: 'chest',
+          category: 'push', load_type: 'bodyweight',
+          is_default: true, user_id: null,
+        },
+        sets: [
+          { id: 4, workout_exercise_id: 2, set_number: 1, reps: 15, weight_kg: 0, is_assistance: false, rpe: 7 },
+          { id: 5, workout_exercise_id: 2, set_number: 2, reps: 13, weight_kg: 0, is_assistance: false, rpe: 8 },
+          { id: 6, workout_exercise_id: 2, set_number: 3, reps: 11, weight_kg: 0, is_assistance: false, rpe: 8 },
+        ],
+      },
+    ],
+  },
+]
+
+// ─── BODY WEIGHT ─────────────────────────────────────────────────────────────
 
 export const mockBodyWeight: BodyWeightEntry[] = [
-  { fecha: 'L', peso: 70.5 },
-  { fecha: 'M', peso: 70.2 },
-  { fecha: 'X', peso: 69.8 },
-  { fecha: 'J', peso: 70.0 },
-  { fecha: 'V', peso: 69.5 },
-  { fecha: 'S', peso: 68.8 },
-  { fecha: 'D', peso: 68.0 },
+  { id: 1, user_id: 1, date: '2026-04-07T00:00:00.000000Z', weight_kg: 70.5, notes: null },
+  { id: 2, user_id: 1, date: '2026-04-08T00:00:00.000000Z', weight_kg: 70.2, notes: null },
+  { id: 3, user_id: 1, date: '2026-04-09T00:00:00.000000Z', weight_kg: 69.8, notes: null },
+  { id: 4, user_id: 1, date: '2026-04-10T00:00:00.000000Z', weight_kg: 70.0, notes: null },
+  { id: 5, user_id: 1, date: '2026-04-11T00:00:00.000000Z', weight_kg: 69.5, notes: null },
+  { id: 6, user_id: 1, date: '2026-04-12T00:00:00.000000Z', weight_kg: 68.8, notes: null },
+  { id: 7, user_id: 1, date: '2026-04-13T00:00:00.000000Z', weight_kg: 68.0, notes: null },
 ]
 
-export const mockProgressByExercise: Record<string, { semana: string; valor: number }[]> = {
-  'Dominadas / Pull-ups': [
-    { semana: 'S1', valor: 7 }, { semana: 'S2', valor: 8 },
-    { semana: 'S3', valor: 8 }, { semana: 'S4', valor: 9 },
-    { semana: 'S5', valor: 10 }, { semana: 'S6', valor: 10 },
-    { semana: 'S7', valor: 11 }, { semana: 'hoy', valor: 12 },
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+
+export const mockDashboard: DashboardData = {
+  workouts_this_month: 14,
+  active_weeks: 11,
+  weekly_score: 84,
+  current_weight: 68.0,
+  active_exercise: 'Pull-up',
+  progression: [
+    { week: 'W1', value: 7 },
+    { week: 'W2', value: 8 },
+    { week: 'W3', value: 8 },
+    { week: 'W4', value: 9 },
+    { week: 'W5', value: 10 },
+    { week: 'W6', value: 10 },
+    { week: 'W7', value: 11 },
+    { week: 'now', value: 12 },
   ],
-  'Fondos / Dips': [
-    { semana: 'S1', valor: 10 }, { semana: 'S2', valor: 11 },
-    { semana: 'S3', valor: 12 }, { semana: 'S4', valor: 12 },
-    { semana: 'S5', valor: 13 }, { semana: 'S6', valor: 14 },
-    { semana: 'S7', valor: 14 }, { semana: 'hoy', valor: 15 },
+  recent_workouts: mockWorkouts,
+  insights: [
+    { type: 'success', text: 'Weekly volume +8% vs last week — sustained progression' },
+    { type: 'warning', text: 'Average RPE this week: 8.2 — consider reducing intensity tomorrow' },
+    { type: 'info',    text: 'Handstand Push-up: no session in 9 days — plan one soon' },
+    { type: 'danger',  text: 'Sleep this week: 6.1h average — below optimal' },
   ],
-  'Handstand': [
-    { semana: 'S1', valor: 20 }, { semana: 'S2', valor: 25 },
-    { semana: 'S3', valor: 28 }, { semana: 'S4', valor: 30 },
-    { semana: 'S5', valor: 35 }, { semana: 'S6', valor: 38 },
-    { semana: 'S7', valor: 40 }, { semana: 'hoy', valor: 45 },
+  sleep_avg: 6.1,
+}
+
+// ─── PROGRESS ────────────────────────────────────────────────────────────────
+
+export const mockProgressByExercise: Record<string, { week: string; value: number }[]> = {
+  'Pull-up': [
+    { week: 'W1', value: 7  }, { week: 'W2', value: 8  },
+    { week: 'W3', value: 8  }, { week: 'W4', value: 9  },
+    { week: 'W5', value: 10 }, { week: 'W6', value: 10 },
+    { week: 'W7', value: 11 }, { week: 'now', value: 12 },
+  ],
+  'Dip': [
+    { week: 'W1', value: 10 }, { week: 'W2', value: 11 },
+    { week: 'W3', value: 12 }, { week: 'W4', value: 12 },
+    { week: 'W5', value: 13 }, { week: 'W6', value: 14 },
+    { week: 'W7', value: 14 }, { week: 'now', value: 15 },
+  ],
+  'Handstand Push-up': [
+    { week: 'W1', value: 20 }, { week: 'W2', value: 25 },
+    { week: 'W3', value: 28 }, { week: 'W4', value: 30 },
+    { week: 'W5', value: 35 }, { week: 'W6', value: 38 },
+    { week: 'W7', value: 40 }, { week: 'now', value: 45 },
   ],
 }
