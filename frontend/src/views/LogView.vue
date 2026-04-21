@@ -28,12 +28,18 @@
             <!-- Ejercicio -->
             <div class="field-group">
               <label class="field-label">Ejercicio</label>
+              <!-- Select de ejercicios: ahora usa exercises del composable -->
               <select v-model="selectedExercise" class="field-input">
                 <option v-for="ex in exercises" :key="ex.id" :value="ex">
                   {{ ex.name }}
                 </option>
               </select>
-            </div>
+
+                <!-- Loading state -->
+                <div v-if="isLoading" style="color: var(--text2); font-size: 13px;">
+                  Cargando ejercicios...
+                </div>
+              </div>
 
             <!-- Series -->
             <div class="field-group">
@@ -93,7 +99,7 @@
                 v-model="notes"
                 class="field-input"
                 rows="2"
-              />
+              ></textarea>
             </div>
 
             <!-- Preview -->
@@ -181,8 +187,6 @@
 import { ref } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { useWorkoutLog } from '@/composables/useWorkoutLog'
-import { mockExercises } from '@/data/mockData'
-import type { Workout } from '@/types'
 
 const {
   date,
@@ -190,46 +194,34 @@ const {
   selectedExercise,
   notes,
   sets,
+  exercises,
   totalReps,
   totalVolume,
   avgRpe,
   history,
+  isLoading,
   addSet,
   removeSet,
   saveWorkout,
+  isPR,
 } = useWorkoutLog()
 
-const exercises = mockExercises
 const saved = ref(false)
 
-function handleSave() {
+async function handleSave() {
   const hasReps = sets.value.some(s => s.reps > 0)
   if (!hasReps) return
 
-  saveWorkout()
-  saved.value = true
-  setTimeout(() => { saved.value = false }, 3000)
+  const result = await saveWorkout()
+  if (result) {
+    saved.value = true
+    setTimeout(() => { saved.value = false }, 3000)
+  }
 }
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr)
   return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
-}
-
-function isPR(workout: Workout): boolean {
-  const sameExercise = history.value.filter(w =>
-    w.workout_exercises.some(we =>
-      workout.workout_exercises.some(we2 => we2.exercise_id === we.exercise_id)
-    )
-  )
-
-  const maxReps = Math.max(...sameExercise.map(w =>
-    Math.max(...w.workout_exercises.flatMap(we => we.sets.map(s => s.reps)))
-  ))
-
-  const theseReps = Math.max(...workout.workout_exercises.flatMap(we => we.sets.map(s => s.reps)))
-
-  return theseReps === maxReps && sameExercise[0]?.id === workout.id
 }
 </script>
 

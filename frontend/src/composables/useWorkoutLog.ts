@@ -1,8 +1,7 @@
-import { ref, computed } from 'vue'
-import { mockExercises, mockWorkouts } from '@/data/mockData'
-import type { Exercise, Workout, WorkoutSet } from '@/types'
+import { ref, computed, onMounted } from 'vue'
+import { workoutService } from '@/services/workoutService'
+import type { Exercise, Workout } from '@/types'
 
-// Tipo local para el formulario — más simple que WorkoutSet completo
 interface FormSet {
   set_number: number
   reps: number
@@ -12,18 +11,44 @@ interface FormSet {
 
 export function useWorkoutLog() {
   const date = ref(new Date().toISOString().split('T')[0])
-  const bodyWeight = ref<number>(68.0)
-  const selectedExercise = ref<Exercise>(mockExercises[0]!)
+  const bodyWeight = ref<number>(70)
   const notes = ref('')
+  const isLoading = ref(false)
+  const isSubmitting = ref(false)
 
-  // Series del formulario — empieza con 3 vacías
+  // Ejercicios cargados desde la API
+  const exercises = ref<Exercise[]>([])
+  const selectedExercise = ref<Exercise | null>(null)
+
+  // Series del formulario
   const sets = ref<FormSet[]>([
     { set_number: 1, reps: 0, weight_kg: 0, rpe: 0 },
     { set_number: 2, reps: 0, weight_kg: 0, rpe: 0 },
     { set_number: 3, reps: 0, weight_kg: 0, rpe: 0 },
   ])
 
-  // Métricas calculadas en tiempo real
+  // Historial cargado desde la API
+  const history = ref<Workout[]>([])
+
+  // Carga inicial al montar el composable
+  onMounted(async () => {
+    isLoading.value = true
+    try {
+      const [exerciseList, workoutList] = await Promise.all([
+        workoutService.getExercises(),
+        workoutService.getWorkouts(),
+      ])
+      // Promise.all → hace las dos llamadas en paralelo, más rápido que secuencial
+
+      exercises.value = exerciseList
+      selectedExercise.value = exerciseList[0] ?? null
+      history.value = workoutList
+    } finally {
+      isLoading.value = false
+    }
+  })
+
+  // Métricas en tiempo real
   const totalReps = computed(() =>
     sets.value.reduce((acc, s) => acc + (s.reps || 0), 0)
   )
@@ -42,9 +67,6 @@ export function useWorkoutLog() {
     return Math.round((sum / withRpe.length) * 10) / 10
   })
 
-  // Historial local — en el futuro vendrá de la API
-  const history = ref<Workout[]>(mockWorkouts)
-
   function addSet() {
     sets.value.push({
       set_number: sets.value.length + 1,
@@ -60,51 +82,60 @@ export function useWorkoutLog() {
     sets.value.forEach((s, i) => { s.set_number = i + 1 })
   }
 
-  function saveWorkout() {
-    // Construimos el workout con la estructura real de la API
-    const newWorkout: Workout = {
-      id: Date.now(),
-      user_id: 1,
-      date: new Date(date.value ?? new Date()).toISOString(),
-      notes: notes.value || null,
-      duration_minutes: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      workout_exercises: [
-        {
-          id: Date.now(),
-          workout_id: Date.now(),
-          exercise_id: selectedExercise.value.id,
-          order_index: 1,
-          load_type: selectedExercise.value.load_type,
-          rest_time: null,
-          intensity_target: null,
-          notes: null,
-          exercise: selectedExercise.value,
-          sets: sets.value.map((s, i): WorkoutSet => ({
-            id: i + 1,
-            workout_exercise_id: Date.now(),
-            set_number: s.set_number,
-            reps: s.reps,
-            weight_kg: s.weight_kg,
-            is_assistance: false,
-            rpe: s.rpe || null,
-          })),
-        },
-      ],
+  async function saveWorkout(): Promise<Workout | null> {
+    if (!selectedExercise.value) return null
+
+    isSubmitting.value = true
+    try {
+      const newWorkout = await workoutService.createWorkout({
+        date: date.value ?? new Date().toISOString().split('T')[0],
+        notes: notes.value || null,
+        duration_minutes: null,
+        exercises: [
+          {
+            exercise_id: selectedExercise.value.id,
+            order_index: 1,
+            load_type: selectedExercise.value.load_type,
+            rest_time: null,
+            notes: null,
+            sets: sets.value.map(s => ({
+              set_number: s.set_number,
+              reps: s.reps,
+              weight_kg: s.weight_kg,
+              rpe: s.rpe || null,
+            })),
+          },
+        ],
+      })
+
+      history.value.unshift(newWorkout)
+      // unshift → añade al principio para que aparezca primero en el historial
+
+      // Resetear formulario
+      sets.value = [
+        { set_number: 1, reps: 0, weight_kg: 0, rpe: 0 },
+        { set_number: 2, reps: 0, weight_kg: 0, rpe: 0 },
+        { set_number: 3, reps: 0, weight_kg: 0, rpe: 0 },
+      ]
+      notes.value = ''
+
+      return newWorkout
+    } finally {
+      isSubmitting.value = false
     }
+  }
 
-    history.value.unshift(newWorkout)
-
-    // Resetear formulario
-    sets.value = [
-      { set_number: 1, reps: 0, weight_kg: 0, rpe: 0 },
-      { set_number: 2, reps: 0, weight_kg: 0, rpe: 0 },
-      { set_number: 3, reps: 0, weight_kg: 0, rpe: 0 },
-    ]
-    notes.value = ''
-
-    return newWorkout
+  function isPR(workout: Workout): boolean {
+    if (!selectedExercise.value) return false
+    const sameEx = history.value.filter(w =>
+      w.workout_exercises.some(we => we.exercise_id === selectedExercise.value!.id)
+    )
+    if (sameEx.length === 0) return false
+    const maxReps = Math.max(...sameEx.map(w =>
+      Math.max(...w.workout_exercises.flatMap(we => we.sets.map(s => s.reps)))
+    ))
+    const theseReps = Math.max(...workout.workout_exercises.flatMap(we => we.sets.map(s => s.reps)))
+    return theseReps === maxReps
   }
 
   return {
@@ -113,12 +144,16 @@ export function useWorkoutLog() {
     selectedExercise,
     notes,
     sets,
+    exercises,
     totalReps,
     totalVolume,
     avgRpe,
     history,
+    isLoading,
+    isSubmitting,
     addSet,
     removeSet,
     saveWorkout,
+    isPR,
   }
 }

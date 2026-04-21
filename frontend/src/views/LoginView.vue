@@ -109,35 +109,32 @@ async function handleLogin() {
   errorGeneral.value = ''
 
   try {
-    // Simulamos la llamada a la API con un timeout
-    // Cuando tengamos Laravel, esto será: await api.post('/auth/login', {...})
-    await new Promise(resolve => setTimeout(resolve, 800))
-
-    // Login simulado — credenciales de demo
-    if (email.value === 'demo@calitrack.com' && password.value === '123456') {
-      authStore.login('fake-token-123', {
-        id: 1,
-        nombre: 'Javier',
-        peso_actual: 68,
-        nivel: 'Intermedio',
-      })
-      router.push('/dashboard')
-    } else {
-      errorGeneral.value = 'Email o contraseña incorrectos'
-    }
+    await authStore.login(email.value, password.value)
+    // authStore.login ahora llama a la API real de Laravel
+    // Si tiene éxito guarda el token y el usuario en el store
+    router.push('/dashboard')
+  } catch (error: any) {
+    // Laravel devuelve 422 con errores de validación
+    // o 401 si las credenciales son incorrectas
+    const msg = error.response?.data?.message
+    errorGeneral.value = msg ?? 'Email o contraseña incorrectos'
   } finally {
     cargando.value = false
   }
 }
 
-function loginDemo() {
-  authStore.login('fake-token-123', {
-    id: 1,
-    nombre: 'Javier',
-    peso_actual: 68,
-    nivel: 'Intermedio',
-  })
-  router.push('/dashboard')
+async function loginDemo() {
+  cargando.value = true
+  errorGeneral.value = ''
+  try {
+    await authStore.login('test@calitrack.com', '123456')
+    // Usa el usuario de prueba que creamos en Postman
+    router.push('/dashboard')
+  } catch {
+    errorGeneral.value = 'No se pudo acceder con la cuenta demo'
+  } finally {
+    cargando.value = false
+  }
 }
 </script>
 
