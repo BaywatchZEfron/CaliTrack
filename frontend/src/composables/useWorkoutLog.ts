@@ -20,6 +20,8 @@ export function useWorkoutLog() {
   const exercises = ref<Exercise[]>([])
   const selectedExercise = ref<Exercise | null>(null)
 
+  const loadType = ref<'bodyweight' | 'weighted' | 'assisted'>('bodyweight')
+
   // Series del formulario
   const sets = ref<FormSet[]>([
     { set_number: 1, reps: 0, weight_kg: 0, rpe: 0 },
@@ -95,7 +97,7 @@ export function useWorkoutLog() {
           {
             exercise_id: selectedExercise.value.id,
             order_index: 1,
-            load_type: selectedExercise.value.load_type,
+            load_type: loadType.value,  
             rest_time: null,
             notes: null,
             sets: sets.value.map(s => ({
@@ -145,6 +147,7 @@ export function useWorkoutLog() {
     notes,
     sets,
     exercises,
+    loadType,
     totalReps,
     totalVolume,
     avgRpe,

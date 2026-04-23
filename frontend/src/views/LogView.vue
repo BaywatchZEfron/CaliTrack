@@ -41,6 +41,16 @@
                 </div>
               </div>
 
+            <div class="field-group">
+              <label class="field-label">Tipo de carga</label>
+
+              <select v-model="loadType" class="field-input">
+                <option value="bodyweight">Bodyweight</option>
+                <option value="weighted">Con lastre</option>
+                <option value="assisted">Asistido (banda)</option>
+              </select>
+            </div>
+
             <!-- Series -->
             <div class="field-group">
               <label class="field-label">Series</label>
@@ -199,6 +209,7 @@ const {
   totalVolume,
   avgRpe,
   history,
+  loadType,
   isLoading,
   addSet,
   removeSet,
