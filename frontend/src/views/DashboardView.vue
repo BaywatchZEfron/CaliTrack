@@ -1,6 +1,12 @@
 <template>
   <AppLayout>
-    <div class="dashboard">
+
+    <!-- Loading state -->
+    <div v-if="isLoading" style="color: var(--text2); padding: 40px; text-align: center;">
+      Cargando dashboard...
+    </div>
+
+    <div v-else-if="data" class="dashboard">
 
       <!-- KPI strip -->
       <div class="kpi-strip">
@@ -20,15 +26,13 @@
           label="Score semanal"
           :value="data.weekly_score"
           unit="/ 100"
-          trend="↑ 12 pts"
-          trend-type="up"
+          trend-type="neutral"
         />
         <MetricCard
           label="Peso corporal"
           :value="data.current_weight ?? '—'"
           unit="kg"
-          trend="↓ 0.5 esta semana"
-          trend-type="down"
+          trend-type="neutral"
         />
       </div>
 
@@ -36,38 +40,35 @@
         <!-- LEFT -->
         <div class="dash-left">
 
-          <!-- Workout hero (sin tocar, sigue hardcodeado) -->
+          <!-- Workout hero — hardcodeado de momento -->
           <div class="card workout-hero">
             <div class="hero-bg">
               <div class="hero-grid" />
               <div class="hero-label">
-                <div class="hero-date">Hoy · Lunes 19 mar</div>
-                <div class="hero-title">Push Day</div>
-                <div class="hero-sub">Fondos · Handstand · Dips</div>
+                <div class="hero-date">Hoy · {{ new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }) }}</div>
+                <div class="hero-title">{{ activeExercise ?? 'Sin actividad' }}</div>
+                <div class="hero-sub">Ejercicio más frecuente este mes</div>
               </div>
             </div>
 
             <div class="hero-body">
               <div class="workout-stats">
                 <div class="w-stat">
-                  <div class="w-stat-val">3.240<span class="w-stat-unit"> kg</span></div>
-                  <div class="w-stat-label">Volumen total</div>
-                  <div class="w-stat-trend">↑ 8%</div>
+                  <div class="w-stat-val">{{ data.workouts_this_month }}<span class="w-stat-unit"> sesiones</span></div>
+                  <div class="w-stat-label">Este mes</div>
                 </div>
                 <div class="w-stat">
-                  <div class="w-stat-val">27<span class="w-stat-unit"> reps</span></div>
-                  <div class="w-stat-label">Total reps</div>
-                  <div class="w-stat-trend">9 series</div>
+                  <div class="w-stat-val">{{ data.active_weeks }}<span class="w-stat-unit"> sem</span></div>
+                  <div class="w-stat-label">Semanas activas</div>
                 </div>
                 <div class="w-stat">
-                  <div class="w-stat-val">7.8<span class="w-stat-unit"> RPE</span></div>
-                  <div class="w-stat-label">Intensidad media</div>
-                  <div class="w-stat-trend" style="color: var(--green)">Óptimo</div>
+                  <div class="w-stat-val">{{ data.weekly_score }}<span class="w-stat-unit"> pts</span></div>
+                  <div class="w-stat-label">Score semanal</div>
                 </div>
               </div>
 
-              <RouterLink to="/progress" class="report-btn">
-                Ver informe completo →
+              <RouterLink to="/log" class="report-btn">
+                Registrar entrenamiento →
               </RouterLink>
             </div>
           </div>
@@ -76,58 +77,27 @@
           <div class="card">
             <div class="card-header">
               <div class="card-title">Progresión</div>
-
               <div class="exercise-pills">
-                <button
-                  v-for="ex in exercises"
-                  :key="ex"
-                  class="ex-pill"
-                  :class="{ active: activeExercise === ex }"
-                  @click="changeExercise(ex)"
-                >
-                  {{ ex }}
+                <button class="ex-pill active">
+                  {{ activeExercise ?? '—' }}
                 </button>
               </div>
             </div>
-
             <div class="chart-wrap">
               <Line :data="chartData" :options="chartOptions" />
             </div>
           </div>
 
-          <!-- PESO -->
+          <!-- PESO CORPORAL -->
           <div class="card">
             <div class="card-header">
               <div class="card-title">Peso corporal</div>
               <span class="card-action">+ Añadir →</span>
             </div>
-
             <div class="bw-row">
               <div class="bw-current">
-                {{ data.current_weight }}<span class="bw-unit"> kg</span>
+                {{ data.current_weight ?? '—' }}<span class="bw-unit"> kg</span>
               </div>
-
-              <div class="bw-meta">
-                <div class="bw-goal-row">
-                  <span class="bw-goal-item">Objetivo: <strong>65 kg</strong></span>
-                  <span class="bw-goal-item" style="color: var(--accent)">
-                    Progreso: <strong>40%</strong>
-                  </span>
-                </div>
-
-                <div class="progress-track">
-                  <div class="progress-fill" style="width: 40%" />
-                </div>
-
-                <div class="progress-labels">
-                  <span>70.5</span>
-                  <span>65 kg</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="chart-wrap-sm">
-              <Line :data="bodyWeightChartData" :options="bodyWeightOptions" />
             </div>
           </div>
 
@@ -139,18 +109,24 @@
           <!-- PLAN -->
           <div class="card">
             <div class="card-header">
-              <div class="card-title">Plan de hoy</div>
-              <span style="font-size: 11px; color: var(--text2)">Lun 19</span>
+              <div class="card-title">Acceso rápido</div>
             </div>
-
             <div class="plan-list">
               <div class="plan-item">
                 <div class="plan-dot" style="background: var(--accent)" />
                 <div>
-                  <div class="plan-title">Push Day</div>
-                  <div class="plan-sub">18:00 · 45 min estimados</div>
+                  <div class="plan-title">Nuevo entrenamiento</div>
+                  <div class="plan-sub">Registra tu sesión de hoy</div>
                 </div>
                 <RouterLink to="/log" class="plan-btn">Iniciar</RouterLink>
+              </div>
+              <div class="plan-item">
+                <div class="plan-dot" style="background: var(--green)" />
+                <div>
+                  <div class="plan-title">Ver progresión</div>
+                  <div class="plan-sub">Analiza tu evolución</div>
+                </div>
+                <RouterLink to="/progress" class="plan-btn">Ver</RouterLink>
               </div>
             </div>
           </div>
@@ -160,7 +136,6 @@
             <div class="card-header">
               <div class="card-title">Smart Insights</div>
             </div>
-
             <InsightItem
               v-for="(insight, i) in data.insights"
               :key="i"
@@ -169,30 +144,32 @@
             />
           </div>
 
-          <!-- REVIEW -->
+          <!-- REVIEW SEMANAL -->
           <div class="card">
             <div class="card-header">
               <div class="card-title">Review semanal</div>
-              <span class="card-action">Ver completo →</span>
             </div>
-
             <div class="score-row">
               <div class="weekly-score">{{ data.weekly_score }}</div>
               <div>
-                <div style="font-size: 12px; color: var(--green)">
-                  ↑ 12 pts vs semana anterior
-                </div>
-                <div style="font-size: 11px; color: var(--text2)">
+                <div style="font-size: 12px; color: var(--text2)">
                   Score esta semana
                 </div>
               </div>
             </div>
-
             <div class="weekly-rows">
+              <div class="weekly-row">
+                <span>Entrenamientos este mes</span>
+                <span>{{ data.workouts_this_month }}</span>
+              </div>
+              <div class="weekly-row">
+                <span>Semanas activas</span>
+                <span>{{ data.active_weeks }} / 12</span>
+              </div>
               <div class="weekly-row">
                 <span>Sueño medio</span>
                 <span style="color: var(--amber)">
-                  {{ data.sleep_avg }}h
+                  {{ data.sleep_avg ? data.sleep_avg + 'h' : '—' }}
                 </span>
               </div>
             </div>
@@ -204,23 +181,33 @@
               <div class="card-title">Sueño esta semana</div>
               <span class="card-action">Añadir →</span>
             </div>
-
             <div style="margin-bottom: 12px;">
               <span class="bw-current" style="font-size: 22px">
-                {{ data.sleep_avg }}
+                {{ data.sleep_avg ?? '—' }}
               </span>
               <span class="bw-unit"> h/noche media</span>
+              <span
+                v-if="data.sleep_avg && data.sleep_avg < 7"
+                style="font-size: 12px; color: var(--amber); margin-left: 8px;"
+              >
+                Por debajo del óptimo
+              </span>
             </div>
           </div>
 
         </div>
       </div>
     </div>
+
+    <!-- Sin datos -->
+    <div v-else style="color: var(--text2); padding: 40px; text-align: center;">
+      No se pudieron cargar los datos del dashboard.
+    </div>
+
   </AppLayout>
 </template>
 
 <script setup lang="ts">
-/* TU SCRIPT NUEVO TAL CUAL */
 import { computed } from 'vue'
 import { Line } from 'vue-chartjs'
 import {
@@ -237,7 +224,6 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 import MetricCard from '@/components/ui/MetricCard.vue'
 import InsightItem from '@/components/ui/InsightItem.vue'
 import { useDashboard } from '@/composables/useDashboard'
-import { mockExercises } from '@/data/mockData'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip)
 
@@ -246,10 +232,8 @@ const {
   bodyWeight,
   activeExercise,
   activeProgression,
-  changeExercise,
+  isLoading,
 } = useDashboard()
-
-const exercises = mockExercises.slice(0, 3).map(e => e.name)
 
 const chartData = computed(() => ({
   labels: activeProgression.value.map(p => p.week),
@@ -267,17 +251,40 @@ const chartData = computed(() => ({
   }],
 }))
 
-const chartOptions = { responsive: true, maintainAspectRatio: false }
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { display: false }, tooltip: { enabled: true } },
+  scales: {
+    x: { grid: { color: '#1e222d' }, ticks: { color: '#4e5566', font: { size: 11 } } },
+    y: { grid: { color: '#1e222d' }, ticks: { color: '#4e5566', font: { size: 11 } } },
+  },
+}
 
 const bodyWeightChartData = computed(() => ({
-  labels: bodyWeight.value.map(b => new Date(b.date).toLocaleDateString('es-ES', { weekday: 'short' })),
+  labels: bodyWeight.value.map(b =>
+    new Date(b.date).toLocaleDateString('es-ES', { weekday: 'short' })
+  ),
   datasets: [{
     data: bodyWeight.value.map(b => b.weight_kg),
     borderColor: '#3d8ef8',
+    backgroundColor: 'transparent',
+    borderWidth: 1.8,
+    pointRadius: 3,
+    pointBackgroundColor: '#3d8ef8',
+    tension: 0.3,
   }],
 }))
 
-const bodyWeightOptions = { responsive: true, maintainAspectRatio: false }
+const bodyWeightOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: {
+    x: { grid: { display: false }, ticks: { color: '#4e5566', font: { size: 10 } } },
+    y: { grid: { color: '#1e222d' }, ticks: { color: '#4e5566', font: { size: 10 } } },
+  },
+}
 </script>
 
 <style scoped>
