@@ -1,53 +1,57 @@
-import { ref, computed } from 'vue'
-import { mockProgressByExercise, mockExercises, mockWorkouts } from '@/data/mockData'
-import type { Exercise } from '@/types'
+import { ref, computed, onMounted } from 'vue'
+import { progressService } from '@/services/progressService'
+import type { ExerciseProgress } from '@/types'
 
 export function useProgress() {
-  const activeExercise = ref<Exercise>(mockExercises[0]!)
+  const progressList = ref<ExerciseProgress[]>([])
+  const activeIndex = ref(0)
+  const isLoading = ref(false)
 
-  const progression = computed(() =>
-    mockProgressByExercise[activeExercise.value.name] ?? []
-  )
-
-  const currentValue = computed(() => {
-    const points = progression.value
-    return points[points.length - 1]?.value ?? 0
+  onMounted(async () => {
+    isLoading.value = true
+    try {
+      progressList.value = await progressService.getProgress()
+    } finally {
+      isLoading.value = false
+    }
   })
+
+  // Ejercicio activo — el seleccionado en la lista lateral
+  const activeProgress = computed(() => progressList.value[activeIndex.value] ?? null)
+  const activeExercise = computed(() => activeProgress.value?.exercise ?? null)
+
+  const progression = computed(() => activeProgress.value?.points ?? [])
+
+  const currentValue = computed(() => activeProgress.value?.current_max ?? 0)
+
+  const goal = computed(() => activeProgress.value?.goal ?? 0)
 
   const startValue = computed(() => progression.value[0]?.value ?? 0)
 
   const improvement = computed(() => currentValue.value - startValue.value)
 
-  const goal = computed(() => Math.ceil(currentValue.value * 1.25))
-
   const goalPercentage = computed(() => {
     const range = goal.value - startValue.value
     const progress = currentValue.value - startValue.value
     if (range <= 0) return 0
-    return Math.round((progress / range) * 100)
+    return Math.min(100, Math.round((progress / range) * 100))
   })
 
-  // Workouts que contienen este ejercicio
-  // Ahora buscamos dentro de workout_exercises en lugar de un campo plano
-  const exerciseWorkouts = computed(() =>
-    mockWorkouts.filter(w =>
-      w.workout_exercises.some(we => we.exercise_id === activeExercise.value.id)
-    )
-  )
-
-  function changeExercise(exercise: Exercise) {
-    activeExercise.value = exercise
+  function changeExercise(index: number) {
+    activeIndex.value = index
   }
 
   return {
+    progressList,
     activeExercise,
+    activeProgress,
     progression,
     currentValue,
     startValue,
     improvement,
     goal,
     goalPercentage,
-    exerciseWorkouts,
+    isLoading,
     changeExercise,
   }
 }

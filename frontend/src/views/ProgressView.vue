@@ -2,35 +2,46 @@
   <AppLayout>
     <div class="progress-page">
 
-      <div class="progress-grid">
+      <div v-if="isLoading" style="color: var(--text2); padding: 40px; text-align: center;">
+        Cargando progresión...
+      </div>
+
+      <div v-else-if="progressList.length === 0" style="color: var(--text2); padding: 40px; text-align: center;">
+        No hay ejercicios registrados todavía. Ve a <RouterLink to="/log">Log</RouterLink> y registra tu primer entrenamiento.
+      </div>
+
+      <div v-else class="progress-grid">
 
         <!-- Lista de ejercicios -->
         <div class="ejercicios-col">
           <div class="card-title" style="margin-bottom: 12px">Ejercicios</div>
           <div class="ejercicio-list">
             <div
-              v-for="ex in mockExercises"
-              :key="ex.id"
+              v-for="(item, index) in progressList"
+              :key="item.exercise.id"
               class="ejercicio-item"
-              :class="{ active: activeExercise.id === ex.id }"
-              @click="changeExercise(ex)"
+              :class="{ active: activeExercise?.id === item.exercise.id }"
+              @click="changeExercise(index)"
             >
-              <div class="ex-icon">{{ icons[ex.name] ?? '💪' }}</div>
-
+              <div class="ex-icon">{{ icons[item.exercise.name] ?? '💪' }}</div>
               <div class="ex-info">
-                <div class="ex-nombre">{{ ex.name }}</div>
-                <div class="ex-sub">
-                  {{ lastSession(ex.name) }}
-                </div>
+                <div class="ex-nombre">{{ item.exercise.name }}</div>
+                <div class="ex-sub">{{ item.points.length }} sesiones</div>
               </div>
-
               <div class="ex-right">
                 <div class="ex-val">
-                  {{ lastValue(ex.name) }}
+                  {{ item.current_max }}
                   <span class="ex-unit">reps</span>
                 </div>
-                <div class="ex-trend">
-                  {{ trend(ex.name) }}
+                <div class="ex-trend" v-if="item.points.length >= 2">
+                  {{
+                    (() => {
+                      const last = item.points[item.points.length - 1]?.value ?? 0
+                      const prev = item.points[item.points.length - 2]?.value ?? 0
+                      const diff = last - prev
+                      return diff > 0 ? `↑ +${diff}` : diff < 0 ? `↓ ${diff}` : '→ igual'
+                    })()
+                  }}
                 </div>
               </div>
             </div>
@@ -38,52 +49,39 @@
         </div>
 
         <!-- Detalle -->
-        <div class="detalle-col">
+        <div v-if="activeProgress" class="detalle-col">
 
           <!-- KPIs -->
           <div class="card">
             <div class="card-header">
-              <div class="card-title">{{ activeExercise.name }}</div>
+              <div class="card-title">{{ activeExercise?.name }}</div>
               <span v-if="improvement > 0" class="pr-badge">PR activo</span>
             </div>
-
             <div class="kpi-row">
               <div class="kpi-item">
                 <div class="kpi-label">Actual</div>
                 <div class="kpi-val">{{ currentValue }}</div>
                 <div class="kpi-sub">reps</div>
               </div>
-
               <div class="kpi-item">
                 <div class="kpi-label">Objetivo</div>
                 <div class="kpi-val">{{ goal }}</div>
                 <div class="kpi-sub">reps</div>
               </div>
-
               <div class="kpi-item">
                 <div class="kpi-label">Progreso</div>
-                <div class="kpi-val" style="color: var(--accent)">
-                  {{ goalPercentage }}%
-                </div>
+                <div class="kpi-val" style="color: var(--accent)">{{ goalPercentage }}%</div>
                 <div class="kpi-sub">al objetivo</div>
               </div>
-
               <div class="kpi-item">
                 <div class="kpi-label">Mejora total</div>
-                <div class="kpi-val" style="color: var(--green)">
-                  +{{ improvement }}
-                </div>
+                <div class="kpi-val" style="color: var(--green)">+{{ improvement }}</div>
                 <div class="kpi-sub">desde inicio</div>
               </div>
             </div>
-
             <div class="progress-track" style="margin-top: 14px">
-              <div
-                class="progress-fill"
-                :style="{ width: goalPercentage + '%' }"
-              />
+              <div class="progress-fill" :style="{ width: goalPercentage + '%' }" />
             </div>
-
             <div class="progress-labels">
               <span>{{ startValue }} (inicio)</span>
               <span>{{ goal }} (meta)</span>
@@ -95,46 +93,31 @@
             <div class="card-header">
               <div class="card-title">Evolución</div>
               <span style="font-size: 11px; color: var(--text2)">
-                {{ progression.length }} sesiones
+                {{ progression.length }} semanas
               </span>
             </div>
-
             <div class="chart-wrap">
               <Line :data="chartData" :options="chartOptions" />
             </div>
           </div>
 
-          <!-- Historial -->
+          <!-- Historial de workouts con este ejercicio -->
           <div class="card">
             <div class="card-title" style="margin-bottom: 14px">Historial</div>
-
-            <div v-if="exerciseWorkouts.length > 0">
+            <div v-if="activeProgress.points.length > 0">
               <div
-                v-for="workout in exerciseWorkouts"
-                :key="workout.id"
+                v-for="(point, i) in [...activeProgress.points].reverse()"
+                :key="i"
                 class="hist-item"
               >
                 <div class="hist-header">
-                  <span class="hist-fecha">
-                    {{ formatDate(workout.date) }}
-                  </span>
-                  <span v-if="isPR(workout)" class="pr-badge">PR</span>
-                </div>
-
-                <div class="hist-series">
-                  <span
-                    v-for="s in workout.workout_exercises[0]?.sets"
-                    :key="s.set_number"
-                    class="hist-badge"
-                  >
-                    S{{ s.set_number }}: {{ s.reps }}r · RPE {{ s.rpe }}
-                  </span>
+                  <span class="hist-fecha">{{ point.week }}</span>
+                  <span class="hist-badge">Máx: {{ point.value }} reps</span>
                 </div>
               </div>
             </div>
-
             <div v-else class="empty-msg">
-              No hay registros de este ejercicio todavía.
+              No hay registros todavía.
             </div>
           </div>
 
@@ -158,20 +141,20 @@ import {
 } from 'chart.js'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { useProgress } from '@/composables/useProgress'
-import { mockExercises, mockProgressByExercise } from '@/data/mockData'
-import type { Workout } from '@/types'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip)
 
 const {
+  progressList,
   activeExercise,
+  activeProgress,
   progression,
   currentValue,
   startValue,
   improvement,
   goal,
   goalPercentage,
-  exerciseWorkouts,
+  isLoading,
   changeExercise,
 } = useProgress()
 
@@ -181,44 +164,13 @@ const icons: Record<string, string> = {
   'Handstand Push-up': '🤸',
   'Muscle-up': '💪',
   'Pistol Squat': '🦵',
-}
-
-function lastValue(name: string): number {
-  const points = mockProgressByExercise[name]
-  return points ? (points[points.length - 1]?.value ?? 0) : 0
-}
-
-function lastSession(name: string): string {
-  const points = mockProgressByExercise[name]
-  if (!points || points.length === 0) return 'Sin registros'
-  return `${points.length} sesiones`
-}
-
-function trend(name: string): string {
-  const points = mockProgressByExercise[name]
-  if (!points || points.length < 2) return ''
-  const last = points[points.length - 1]?.value ?? 0
-  const prev = points[points.length - 2]?.value ?? 0
-  const diff = last - prev
-  if (diff > 0) return `↑ +${diff}`
-  if (diff < 0) return `↓ ${diff}`
-  return '→ igual'
+  'Push-up': '💪',
+  'Diamond Push-up': '💎',
 }
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr)
   return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
-}
-
-function isPR(workout: Workout): boolean {
-  const sameEx = exerciseWorkouts.value.filter(w =>
-    w.workout_exercises.some(we => we.exercise_id === activeExercise.value.id)
-  )
-  const maxReps = Math.max(...sameEx.map(w =>
-    Math.max(...w.workout_exercises.flatMap(we => we.sets.map(s => s.reps)))
-  ))
-  const theseReps = Math.max(...workout.workout_exercises.flatMap(we => we.sets.map(s => s.reps)))
-  return theseReps === maxReps && sameEx[0]?.id === workout.id
 }
 
 const chartData = computed(() => ({
