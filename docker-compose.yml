@@ -1,0 +1,91 @@
+services:
+
+  # ── Base de datos ───────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: calitrack_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: calitrack
+      MYSQL_USER: calitrack
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # mysql_data → volumen persistente, los datos sobreviven al reiniciar
+    ports:
+      - "3307:3306"
+      # 3307 en tu máquina → 3306 dentro del contenedor
+      # Usamos 3307 para no chocar con tu MySQL local en 3306
+    healthcheck:
+      test: [CMD, mysqladmin, ping, -h, localhost]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      # healthcheck → Docker espera a que MySQL esté listo antes de arrancar Laravel
+
+  # ── Backend Laravel ─────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: calitrack_backend
+    env_file:
+      - ./backend/.env.docker
+      # Carga variables de entorno desde el .env del backend
+    environment:
+      APP_ENV: production
+      APP_KEY: 
+      # APP_KEY viene del .env del backend — nunca hardcodeado
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      # 'mysql' es el nombre del servicio de arriba — Docker lo resuelve solo
+      DB_PORT: 3306
+      DB_DATABASE: calitrack
+      DB_USERNAME: calitrack
+      DB_PASSWORD: secret
+    volumes:
+      - ./backend:/var/www
+      - /var/www/vendor
+      # /var/www/vendor → excluye vendor del bind mount
+      # Sin esto Docker usaría el vendor de tu máquina en lugar del del contenedor
+    depends_on:
+      mysql:
+        condition: service_healthy
+        # Espera a que MySQL esté healthy antes de arrancar
+    networks:
+      - calitrack_network
+
+  # ── Frontend Vue ────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: calitrack_frontend
+    networks:
+      - calitrack_network
+
+  # ── NGINX proxy ─────────────────────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: calitrack_nginx
+    ports:
+      - 80:80
+      # Puerto 80 de tu máquina → puerto 80 de NGINX
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./backend:/var/www
+      # Backend montado para que NGINX pueda servir archivos estáticos de Laravel
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - calitrack_network
+
+networks:
+  calitrack_network:
+    driver: bridge
+    # Red interna — los contenedores se comunican por nombre
+
+volumes:
+  mysql_data:
+    # Volumen persistente para MySQL

@@ -86,8 +86,8 @@
       <div class="sidebar-user">
         <div class="user-avatar">{{ userInitials }}</div>
         <div>
-          <div class="user-name">{{ authStore.user?.nombre ?? 'Usuario' }}</div>
-          <div class="user-level">{{ authStore.user?.nivel ?? '—' }} · {{ authStore.user?.peso_actual ?? '—' }} kg</div>
+          <div class="user-name">{{ authStore.user?.name ?? 'Usuario' }}</div>
+          <div class="user-level">{{ authStore.user?.level ?? '—' }} · {{ authStore.user?.weight_kg ?? '—' }} kg</div>
         </div>
       </div>
     </aside>
@@ -157,7 +157,7 @@ const pageTitle = computed(() => pageTitles[route.path] ?? 'CaliTrack')
 
 // Iniciales del usuario para el avatar
 const userInitials = computed(() => {
-  const nombre = authStore.user?.nombre ?? ''
+  const nombre = authStore.user?.name ?? ''
   return nombre.slice(0, 2).toUpperCase() || 'CT'
 })
 </script>

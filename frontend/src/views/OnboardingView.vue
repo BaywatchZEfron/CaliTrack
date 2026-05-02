@@ -402,15 +402,13 @@ async function finalizar() {
   try {
     // Simulamos llamada a API — cuando tengamos Laravel:
     // await api.post('/auth/register', form)
-    await new Promise(resolve => setTimeout(resolve, 1000))
 
     // Login automático tras registro
-    authStore.login('fake-token-nuevo', {
-      id: 2,
-      nombre: form.nombre,
-      peso_actual: form.peso ?? 70,
-      nivel: form.nivel,
-    })
+    await authStore.register(
+      form.nombre,        // name
+      form.email,         // email  
+      form.password,      // password
+    )
 
     // Limpiar sessionStorage
     sessionStorage.removeItem('ob-form')

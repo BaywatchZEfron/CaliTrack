@@ -10,7 +10,7 @@ interface FormSet {
 }
 
 export function useWorkoutLog() {
-  const date = ref(new Date().toISOString().split('T')[0])
+  const date = ref<string>(new Date().toISOString().slice(0, 10))
   const bodyWeight = ref<number>(70)
   const notes = ref('')
   const isLoading = ref(false)
@@ -90,7 +90,7 @@ export function useWorkoutLog() {
     isSubmitting.value = true
     try {
       const newWorkout = await workoutService.createWorkout({
-        date: date.value ?? new Date().toISOString().split('T')[0],
+        date: date.value,
         notes: notes.value || null,
         duration_minutes: null,
         exercises: [

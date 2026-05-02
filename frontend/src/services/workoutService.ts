@@ -36,6 +36,6 @@ export const workoutService = {
   },
 
   async deleteWorkout(id: number): Promise<void> {
-    await api.delete(/workouts/)
+    await api.delete(`/workouts/${id}`)
   },
 }
