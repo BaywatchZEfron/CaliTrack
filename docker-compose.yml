@@ -21,6 +21,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - calitrack_network
       # healthcheck → Docker espera a que MySQL esté listo antes de arrancar Laravel
 
   # ── Backend Laravel ─────────────────────────────────────────────────────────

@@ -37,6 +37,12 @@ RUN composer install --optimize-autoloader --no-dev
 # --no-dev → no instala dependencias de desarrollo en producción
 # --optimize-autoloader → genera autoloader optimizado, más rápido
 
+# Elimina paquetes dev del caché de autodiscovery
+RUN php -r "\
+\$p = require 'bootstrap/cache/packages.php'; \
+unset(\$p['laravel/pail'], \$p['nunomaduro/collision']); \
+file_put_contents('bootstrap/cache/packages.php', '<?php return ' . var_export(\$p, true) . ';');"
+
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 # www-data es el usuario de PHP-FPM
 # Laravel necesita escribir en storage/ y bootstrap/cache/
