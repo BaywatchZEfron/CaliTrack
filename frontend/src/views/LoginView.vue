@@ -57,11 +57,6 @@
           ¿No tienes cuenta?
           <RouterLink to="/onboarding" class="login-link">Regístrate gratis</RouterLink>
         </div>
-
-        <!-- Acceso rápido demo -->
-        <button class="demo-btn" @click="loginDemo">
-          Entrar con cuenta demo
-        </button>
       </div>
     </div>
   </div>

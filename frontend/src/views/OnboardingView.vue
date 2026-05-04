@@ -400,20 +400,33 @@ async function finalizar() {
   cargando.value = true
 
   try {
-    // Simulamos llamada a API — cuando tengamos Laravel:
-    // await api.post('/auth/register', form)
+    await authStore.register(form.nombre, form.email, form.password)
 
-    // Login automático tras registro
-    await authStore.register(
-      form.nombre,        // name
-      form.email,         // email  
-      form.password,      // password
-    )
+    const nivelMap: Record<string, string> = {
+      'Principiante': 'beginner',
+      'Intermedio': 'intermediate',
+      'Avanzado': 'advanced',
+    }
+    const goalMap: Record<string, string> = {
+      'fuerza': 'strength',
+      'peso': 'weight_loss',
+      'habilidades': 'skill',
+    }
 
-    // Limpiar sessionStorage
+    await authStore.updateProfile({
+      weight_kg: form.peso ?? undefined,
+      height_cm: form.altura ?? undefined,
+      level: (nivelMap[form.nivel] as 'beginner' | 'intermediate' | 'advanced') ?? undefined,
+      goal: (goalMap[form.objetivo] as 'strength' | 'weight_loss' | 'skill') ?? undefined,
+    })
+
     sessionStorage.removeItem('ob-form')
-
     router.push('/dashboard')
+
+  } catch (err: any) {
+    // Muestra el error de Laravel si existe
+    const msg = err?.response?.data?.message ?? 'Error al crear la cuenta'
+    alert(msg)  // puedes cambiarlo por un ref visible en la UI si quieres
   } finally {
     cargando.value = false
   }

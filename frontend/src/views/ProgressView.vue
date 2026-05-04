@@ -201,13 +201,139 @@ const chartOptions = {
 </script>
 
 <style scoped>
-/* 🔒 STYLE ORIGINAL INTACTO */
 .progress-page { display: flex; flex-direction: column; gap: 20px; }
-.progress-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
-.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
-.card:last-child { margin-bottom: 0; }
-.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-.card-title { font-family: var(--font-head); font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; }
 
-/* resto igual… */
+.progress-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* Lista ejercicios */
+.ejercicios-col {}
+.ejercicio-list { display: flex; flex-direction: column; gap: 8px; }
+.ejercicio-item {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ejercicio-item:hover { border-color: var(--border2); }
+.ejercicio-item.active { border-color: var(--accent); background: rgba(61,142,248,0.05); }
+
+.ex-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.ex-nombre { font-size: 13px; font-weight: 500; color: var(--text); }
+.ex-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.ex-right { margin-left: auto; text-align: right; }
+.ex-val { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--text); }
+.ex-unit { font-size: 11px; color: var(--text2); }
+.ex-trend { font-size: 11px; color: var(--green); }
+
+/* Detalle */
+.detalle-col { display: flex; flex-direction: column; gap: 16px; }
+
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-family: var(--font-head);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* KPIs */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.kpi-item {
+  background: var(--bg3);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+.kpi-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.kpi-val { font-family: var(--font-head); font-size: 20px; font-weight: 700; color: var(--text); }
+.kpi-sub { font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+/* Barra de progreso */
+.progress-track {
+  height: 4px;
+  background: var(--bg4);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+  max-width: 100%;
+}
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+/* Gráfica */
+.chart-wrap { position: relative; height: 200px; }
+
+/* Historial */
+.hist-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.hist-item:last-child { border-bottom: none; }
+.hist-header { display: flex; align-items: center; justify-content: space-between; }
+.hist-fecha { font-size: 12px; color: var(--text2); }
+.hist-badge {
+  background: var(--bg3);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--text2);
+}
+.pr-badge {
+  background: rgba(34,200,122,0.12);
+  color: var(--green);
+  border-radius: 4px;
+  font-size: 10px;
+  padding: 2px 6px;
+  font-weight: 600;
+}
+.empty-msg { font-size: 13px; color: var(--text2); }
+
+@media (max-width: 900px) {
+  .progress-grid { grid-template-columns: 1fr; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+}
 </style>
