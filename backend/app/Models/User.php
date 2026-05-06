@@ -21,6 +21,7 @@ class User extends Authenticatable
         'weight_kg',
         'level',
         'goal',
+        'plan',
     ];
 
     protected $hidden = [

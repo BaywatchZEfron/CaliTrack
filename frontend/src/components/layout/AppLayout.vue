@@ -67,6 +67,24 @@
 
         <div class="nav-section-label">Personal</div>
 
+        <RouterLink to="/plans" class="nav-item" @click="closeSidebar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <path d="M8 21h8M12 17v4"/>
+          </svg>
+          Planes
+        </RouterLink>
+
+        <RouterLink to="/invoice" class="nav-item" @click="closeSidebar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          Factura
+        </RouterLink>
+
         <RouterLink to="/profile" class="nav-item" @click="closeSidebar">
           <svg
             width="16"
@@ -152,7 +170,10 @@ const pageTitles: Record<string, string> = {
   '/log': 'Registrar',
   '/progress': 'Progresión',
   '/profile': 'Mi perfil',
+  '/plans': 'Planes',
+  '/invoice': 'Factura',
 }
+
 const pageTitle = computed(() => pageTitles[route.path] ?? 'CaliTrack')
 
 // Iniciales del usuario para el avatar

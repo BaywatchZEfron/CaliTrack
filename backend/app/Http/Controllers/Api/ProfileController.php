@@ -17,6 +17,7 @@ class ProfileController extends Controller
             'weight_kg'  => 'sometimes|integer|min:30|max:300',
             'level'      => 'sometimes|in:beginner,intermediate,advanced',
             'goal'       => 'sometimes|in:strength,endurance,weight_loss,skill',
+            'plan'       => 'sometimes|in:free,premium',
             // 'sometimes' → el campo es opcional, solo se valida si viene en la petición
             // Así el frontend puede enviar solo los campos que cambiaron
         ]);
