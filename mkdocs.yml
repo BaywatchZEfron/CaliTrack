@@ -1,0 +1,26 @@
+site_name: CaliTrack
+site_description: Plataforma web de análisis de progresión en calistenia
+site_author: Tu nombre
+repo_url: https://github.com/BaywatchZEfron/CaliTrack
+repo_name: BaywatchZEfron/CaliTrack
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: blue
+    accent: blue
+  font:
+    text: DM Sans
+    code: Roboto Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+
+nav:
+  - Inicio: index.md
+  - Arquitectura: arquitectura.md
+  - Frontend: frontend.md
+  - Backend: backend.md
+  - Docker: docker.md
+  - API: api.md
