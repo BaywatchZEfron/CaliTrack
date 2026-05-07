@@ -20,7 +20,6 @@ theme:
 nav:
   - Inicio: index.md
   - Arquitectura: arquitectura.md
+  - Despliegue: despliegue.md
   - Frontend: frontend.md
   - Backend: backend.md
-  - Docker: docker.md
-  - API: api.md
