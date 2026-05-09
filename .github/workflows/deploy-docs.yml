@@ -1,0 +1,47 @@
+name: Deploy MkDocs to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main          
+  workflow_dispatch:  
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar MkDocs y tema Material
+        run: |
+          pip install mkdocs mkdocs-material
+
+      - name: Build de la documentación
+        run: python -m mkdocs build --strict
+        # --strict convierte warnings en errores
+        # Si un enlace interno está roto, el build falla aquí y no despliega basura
+
+      - name: Subir artefacto a GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site   # MkDocs genera el HTML estático aquí
+
+      - name: Desplegar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
