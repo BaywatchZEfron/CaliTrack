@@ -23,3 +23,4 @@ nav:
   - Despliegue: despliegue.md
   - Frontend: frontend.md
   - Backend: backend.md
+  - CI/CD: cicd.md
