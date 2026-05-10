@@ -1,0 +1,59 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: calitrack_mysql_dev
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: calitrack_dev
+      MYSQL_USER: calitrack_user
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+    networks:
+      - calitrack_dev
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: calitrack_backend_dev
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_HOST: mysql
+      DB_DATABASE: calitrack_dev
+      DB_USERNAME: calitrack_user
+      DB_PASSWORD: secret
+    depends_on:
+      - mysql
+    networks:
+      - calitrack_dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8081/api
+    container_name: calitrack_frontend_dev
+    networks:
+      - calitrack_dev
+
+  nginx:
+    image: nginx:alpine
+    container_name: calitrack_nginx_dev
+    ports:
+      - "8081:80"          # ← Puerto 8080 para dev
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - calitrack_dev
+
+volumes:
+  mysql_dev_data:
+
+networks:
+  calitrack_dev:
